@@ -1,0 +1,33 @@
+local dalgonaModule = game:GetService("ReplicatedStorage"):WaitForChild("Modules"):FindFirstChild("Games"):FindFirstChild("DalgonaClient")
+if not dalgonaModule then return end
+
+for _, fn in ipairs(getreg()) do
+	if typeof(fn) == "function" and islclosure(fn) then
+		local success, env = pcall(getfenv, fn)
+		if success and env and env.script == dalgonaModule then
+			local totalIndex, tracedIndex
+			local info = debug.getinfo(fn)
+			if not info or type(info.nups) ~= "number" then continue end
+
+			for i = 1, info.nups do
+				local upvalue = debug.getupvalue(fn, i)
+				if typeof(upvalue) == "number" then
+					if upvalue > 1 and upvalue < 999 then
+						totalIndex = i
+					elseif upvalue >= 0 and upvalue <= 10 then
+						tracedIndex = i
+					end
+				end
+			end
+
+			if totalIndex and tracedIndex then
+				local total = debug.getupvalue(fn, totalIndex)
+				local traced = debug.getupvalue(fn, tracedIndex)
+				if typeof(total) == "number" and typeof(traced) == "number" and traced < total then
+					setupvalue(fn, tracedIndex, total)
+					break
+				end
+			end
+		end
+	end
+end
